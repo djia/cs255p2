@@ -10,23 +10,22 @@ import java.net.Socket;
  */
 public final class MITMPlainSocketFactory implements MITMSocketFactory
 {
-    public final ServerSocket createServerSocket(String localHost,
-						 int localPort,
-						 int timeout)
-	throws IOException
-    {
-	final ServerSocket socket =
-	    new ServerSocket(localPort, 50, InetAddress.getByName(localHost));
+	public final ServerSocket createServerSocket(String localHost,
+			int localPort,
+			int timeout)
+					throws IOException
+	{
+		final ServerSocket socket = new ServerSocket(localPort, 50, InetAddress.getByName(localHost));
 
-	socket.setSoTimeout(timeout);
+		socket.setSoTimeout(timeout);
 
-	return socket;
-    }
+		return socket;
+	}
 
-    public final Socket createClientSocket(String remoteHost, int remotePort)
-	throws IOException
-    {
-	return new Socket(remoteHost, remotePort);
-    }
+	public final Socket createClientSocket(String remoteHost, int remotePort)
+			throws IOException
+	{
+		return new Socket(remoteHost, remotePort);
+	}
 }
 
