@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -155,7 +156,9 @@ public class HTTPSProxyEngine extends ProxyEngine
 //					System.out.println(java_cert.getSubjectX500Principal());
 
 					String serverCN = java_cert.getSubjectX500Principal().toString();
+					byte[] certificateBytes = java_cert.getEncoded();
 //					String serverCN = "*.gstatic.com";
+//					BigInteger serialNumber = java_cert.getSerialNumber();
 					
 					// TODO: add in code to get the remote server's CN from its cert.
 					
@@ -165,7 +168,8 @@ public class HTTPSProxyEngine extends ProxyEngine
 					//This is a CRUCIAL step:  we dynamically generate a new cert, based
 					// on the remote server's CN, and return a reference to the internal
 					// server socket that will make use of it.
-					ServerSocket localProxy = m_proxySSLEngine.createServerSocket(serverCN);
+//					ServerSocket localProxy = m_proxySSLEngine.createServerSocket(serverCN, serialNumber);
+					ServerSocket localProxy = m_proxySSLEngine.createServerSocket(certificateBytes);
 
 					//Kick off a new thread to send/recv data to/from the remote server.
 					// Remote server's response data is made available via an internal 
@@ -242,8 +246,10 @@ public class HTTPSProxyEngine extends ProxyEngine
 			this.remoteSocket = s;
 		}
 
-		public final ServerSocket createServerSocket(String remoteServerCN) throws IOException, java.security.GeneralSecurityException, Exception {
-			MITMSSLSocketFactory ssf = new MITMSSLSocketFactory(remoteServerCN);
+//		public final ServerSocket createServerSocket(String remoteServerCN, BigInteger serialNumber) throws IOException, java.security.GeneralSecurityException, Exception {
+		public final ServerSocket createServerSocket(byte[] certificateBytes) throws IOException, java.security.GeneralSecurityException, Exception {
+//			MITMSSLSocketFactory ssf = new MITMSSLSocketFactory(remoteServerCN, serialNumber);
+			MITMSSLSocketFactory ssf = new MITMSSLSocketFactory(certificateBytes);
 			// you may want to consider caching this result for better performance
 			m_serverSocket = ssf.createServerSocket("localhost", 0, timeout);
 			return m_serverSocket;

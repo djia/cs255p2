@@ -10,15 +10,18 @@ import javax.net.ssl.X509TrustManager;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.Principal;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -35,6 +38,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.security.auth.x500.X500Principal;
 
+import iaik.asn1.structures.AlgorithmID;
 import iaik.x509.X509Certificate;
 
 
@@ -106,7 +110,8 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 	 * that is initialized with a dynamically generated server certificate
 	 * that contains the specified common name.
 	 */
-	public MITMSSLSocketFactory(String remoteCN)
+//	public MITMSSLSocketFactory(String remoteCN, BigInteger serialNumber)
+	public MITMSSLSocketFactory(byte[] certificateBytes)
 			throws IOException,GeneralSecurityException, Exception
 	{
 		// TODO: replace this with code to generate a new
@@ -169,20 +174,59 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 //		cert.sign(privkey, algorithm);
 		
 		// create a new certificate
-		X509Certificate cert = new X509Certificate();
-		GregorianCalendar date = (GregorianCalendar)Calendar.getInstance();
-		cert.setValidNotBefore(date.getTime());                    
-		date.add(Calendar.MONTH, 6);
-		cert.setValidNotAfter(date.getTime());
-		
-		System.out.println(remoteCN);
-		
+//		X509Certificate cert = new X509Certificate();
+//		GregorianCalendar date = (GregorianCalendar)Calendar.getInstance();
+//		cert.setValidNotBefore(date.getTime());                    
+//		date.add(Calendar.MONTH, 6);
+//		cert.setValidNotAfter(date.getTime());
+//		cert.setSerialNumber(remoteCert.getSerialNumber());
+//		cert.setIssuerDN(remoteCert.getIssuerDN());
+//		System.out.println(remoteCN);
 //		cert.setSubjectDN(new X500Principal(remoteCN));
+		X509Certificate cert = new X509Certificate(certificateBytes);
+//		cert.sign(AlgorithmID.dsa_With_SHA1, (PrivateKey)keyStore.getKey("mykey", new String("password").toCharArray()));
+//		keyStore.setCertificateEntry("mykey", cert);
+//		KeyStore newKeyStore = KeyStore.getInstance(keyStoreType);
+//		newKeyStore.load(null, null);
+		PrivateKey myKey = (PrivateKey) keyStore.getKey("mykey", new String("password").toCharArray());
+//		newKeyStore.setKeyEntry("mykey", myKey, new String("password").toCharArray(), certChain);
+		
+		// get the old certificate
+		java.security.cert.X509Certificate oldJavaCert = (java.security.cert.X509Certificate)keyStore.getCertificate("mykey");
+//		PublicKey publicKey = oldJavaCert.getPublicKey();
+//		byte[] signature = oldJavaCert.getSignature();
+//		BigInteger serialNumber = oldJavaCert.getSerialNumber();
+		byte[] oldJavaCertBytes = oldJavaCert.getEncoded();
+		
+		X509Certificate oldCert = new X509Certificate(oldJavaCertBytes);
+		Principal certSubject = cert.getSubjectDN();
+		Principal cerIssuer = cert.getIssuerDN();
+		BigInteger serialNumber = cert.getSerialNumber();
+		oldCert.setSubjectDN(certSubject);
+//		oldCert.setIssuerDN(cerIssuer);
+		oldCert.setSerialNumber(serialNumber);
+		oldCert.sign(AlgorithmID.sha1WithRSAEncryption, myKey);
+//		oldCert.setIssuerDN(cert.getIssuerDN());
+		
+//		cert.setPublicKey(publicKey);
+//		cert.setSignature(signature);
+//		cert.setSerialNumber(serialNumber);
+		
+		X509Certificate[] certChain = {oldCert};
+		
+//		PublicKey publicKey = oldCert.getPublicKey();
+//		cert.setPublicKey(publicKey);
+//		cert.sign(AlgorithmID.dsaWithSHA1, myKey);
+		
+//		X509Certificate[] certChain = {cert};
+		
+		keyStore.setKeyEntry("mykey", myKey, new String("password").toCharArray(), certChain);
 		
 //		keyStore.setCertificateEntry("my_cert", cert);
-		System.out.println(keyStore.size());
+//		System.out.println(keyStore.size());
 		
 		keyManagerFactory.init(keyStore, keyStorePassword);
+//		keyManagerFactory.init(newKeyStore, keyStorePassword);
 
 		m_sslContext.init(keyManagerFactory.getKeyManagers(), new TrustManager[] { new TrustEveryone() }, null);
 
