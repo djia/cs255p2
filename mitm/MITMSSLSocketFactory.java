@@ -114,7 +114,7 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 	public MITMSSLSocketFactory(byte[] certificateBytes)
 			throws IOException,GeneralSecurityException, Exception
 	{
-		// TODO: replace this with code to generate a new
+		// DONETODO: replace this with code to generate a new
 		// server certificate with common name remoteCN
 		
 //		this();
@@ -138,66 +138,15 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 			keyStore = null;
 		}
 		
-		// dynamically create a new key with the remoteCN and save it in the keystore
-		// first generate a key pair
-//		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-//		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-//		keyGen.initialize(1024, random);
-//		KeyPair pair = keyGen.generateKeyPair();
-		
-		// create new certificate
-//		PrivateKey privkey = pair.getPrivate();
-//		X509CertInfo info = new X509CertInfo();
-//		Date from = new Date();
-//		Date to = new Date(from.getTime() + days * 86400000l);
-//		CertificateValidity interval = new CertificateValidity(from, to);
-//		BigInteger sn = new BigInteger(64, new SecureRandom());
-//		X500Name owner = new X500Name(dn);
-// 
-//		info.set(X509CertInfo.VALIDITY, interval);
-//		info.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(sn));
-//		info.set(X509CertInfo.SUBJECT, new CertificateSubjectName(owner));
-//		info.set(X509CertInfo.ISSUER, new CertificateIssuerName(owner));
-//		info.set(X509CertInfo.KEY, new CertificateX509Key(pair.getPublic()));
-//		info.set(X509CertInfo.VERSION, new CertificateVersion(CertificateVersion.V3));
-//		AlgorithmId algo = new AlgorithmId(AlgorithmId.md5WithRSAEncryption_oid);
-//		info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(algo));
-// 
-//		// Sign the cert to identify the algorithm that's used.
-//		X509CertImpl cert = new X509CertImpl(info);
-//		cert.sign(privkey, algorithm);
-// 
-//		// Update the algorith, and resign.
-//		algo = (AlgorithmId)cert.get(X509CertImpl.SIG_ALG);
-//		info.set(CertificateAlgorithmId.NAME + "." + CertificateAlgorithmId.ALGORITHM, algo);
-//		cert = new X509CertImpl(info);
-//		cert.sign(privkey, algorithm);
-		
-		// create a new certificate
-//		X509Certificate cert = new X509Certificate();
-//		GregorianCalendar date = (GregorianCalendar)Calendar.getInstance();
-//		cert.setValidNotBefore(date.getTime());                    
-//		date.add(Calendar.MONTH, 6);
-//		cert.setValidNotAfter(date.getTime());
-//		cert.setSerialNumber(remoteCert.getSerialNumber());
-//		cert.setIssuerDN(remoteCert.getIssuerDN());
-//		System.out.println(remoteCN);
-//		cert.setSubjectDN(new X500Principal(remoteCN));
+
 		X509Certificate cert = new X509Certificate(certificateBytes);
-//		cert.sign(AlgorithmID.dsa_With_SHA1, (PrivateKey)keyStore.getKey("mykey", new String("password").toCharArray()));
-//		keyStore.setCertificateEntry("mykey", cert);
-//		KeyStore newKeyStore = KeyStore.getInstance(keyStoreType);
-//		newKeyStore.load(null, null);
 		PrivateKey myKey = (PrivateKey) keyStore.getKey("mykey", new String("password").toCharArray());
-//		newKeyStore.setKeyEntry("mykey", myKey, new String("password").toCharArray(), certChain);
 		
 		// get the old certificate
 		java.security.cert.X509Certificate oldJavaCert = (java.security.cert.X509Certificate)keyStore.getCertificate("mykey");
-//		PublicKey publicKey = oldJavaCert.getPublicKey();
-//		byte[] signature = oldJavaCert.getSignature();
-//		BigInteger serialNumber = oldJavaCert.getSerialNumber();
 		byte[] oldJavaCertBytes = oldJavaCert.getEncoded();
 		
+		// put the subjectDN from the remote certificate to the old certificate and sign it
 		X509Certificate oldCert = new X509Certificate(oldJavaCertBytes);
 		Principal certSubject = cert.getSubjectDN();
 		Principal cerIssuer = cert.getIssuerDN();
@@ -208,25 +157,11 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 		oldCert.sign(AlgorithmID.sha1WithRSAEncryption, myKey);
 //		oldCert.setIssuerDN(cert.getIssuerDN());
 		
-//		cert.setPublicKey(publicKey);
-//		cert.setSignature(signature);
-//		cert.setSerialNumber(serialNumber);
-		
 		X509Certificate[] certChain = {oldCert};
-		
-//		PublicKey publicKey = oldCert.getPublicKey();
-//		cert.setPublicKey(publicKey);
-//		cert.sign(AlgorithmID.dsaWithSHA1, myKey);
-		
-//		X509Certificate[] certChain = {cert};
 		
 		keyStore.setKeyEntry("mykey", myKey, new String("password").toCharArray(), certChain);
 		
-//		keyStore.setCertificateEntry("my_cert", cert);
-//		System.out.println(keyStore.size());
-		
 		keyManagerFactory.init(keyStore, keyStorePassword);
-//		keyManagerFactory.init(newKeyStore, keyStorePassword);
 
 		m_sslContext.init(keyManagerFactory.getKeyManagers(), new TrustManager[] { new TrustEveryone() }, null);
 

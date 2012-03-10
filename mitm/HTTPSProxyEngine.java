@@ -160,7 +160,7 @@ public class HTTPSProxyEngine extends ProxyEngine
 //					String serverCN = "*.gstatic.com";
 //					BigInteger serialNumber = java_cert.getSerialNumber();
 					
-					// TODO: add in code to get the remote server's CN from its cert.
+					// DONETODO: add in code to get the remote server's CN from its cert.
 					
 					//We've already opened the socket, so might as well keep using it:
 					m_proxySSLEngine.setRemoteSocket(remoteSocket);
