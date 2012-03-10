@@ -79,7 +79,7 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 			throws IOException,GeneralSecurityException
 	{
 		m_sslContext = SSLContext.getInstance("SSL");
-
+	
 		final KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 
 		final String keyStoreFile = System.getProperty(JSSEConstants.KEYSTORE_PROPERTY);

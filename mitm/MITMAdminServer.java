@@ -24,10 +24,10 @@ class MITMAdminServer implements Runnable
     private HTTPSProxyEngine m_engine;
     
     public MITMAdminServer( String localHost, int adminPort, HTTPSProxyEngine engine ) throws IOException {
-	MITMPlainSocketFactory socketFactory =
-	    new MITMPlainSocketFactory();
-	m_serverSocket = socketFactory.createServerSocket( localHost, adminPort, 0 );
-	m_engine = engine;
+		MITMPlainSocketFactory socketFactory =
+		    new MITMPlainSocketFactory();
+		m_serverSocket = socketFactory.createServerSocket( localHost, adminPort, 0 );
+		m_engine = engine;
     }
 
     public void run() {
@@ -81,8 +81,18 @@ class MITMAdminServer implements Runnable
 
     // TODO implement the commands
     private void doCommand( String cmd ) throws IOException {
-
-	m_socket.close();
+    	PrintWriter writer = new PrintWriter(m_socket.getOutputStream());
+    	if(cmd.equals("shutdown")){
+    		writer.println("Shutting down proxy server.");
+    		m_engine.shutdown();
+    	} else if(cmd.equals("stats")) {
+    		int numRequests = m_engine.getNumRequests();
+    		writer.println("Number of requests was: " + numRequests);
+    	} else {
+    		writer.println("Please submit a valid command: \"shutdown\" or \"stats\"");
+    	}
+    	writer.flush();
+    	m_socket.close();
 	
     }
 
