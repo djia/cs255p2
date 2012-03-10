@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.net.ssl.SSLSocket;
+import javax.security.auth.x500.X500Principal;
 
 import iaik.asn1.ObjectID;
 import iaik.asn1.structures.Name;
@@ -139,6 +140,8 @@ public class HTTPSProxyEngine extends ProxyEngine
 						// get the java_cert
 						if(remoteSocket.getSession().getPeerCertificates().length > 0) {
 							java_cert = (X509Certificate) remoteSocket.getSession().getPeerCertificates()[0];
+						} else {
+							continue;
 						}
 					} catch (IOException ioe) {
 						ioe.printStackTrace();
@@ -148,10 +151,10 @@ public class HTTPSProxyEngine extends ProxyEngine
 					}
 					
 					// getSubjectDN is denigrated, (but still works), use getSubjectX500Principal according to the javadocs
-					System.out.println(java_cert.getSubjectDN());
-					System.out.println(java_cert.getSubjectX500Principal());
+//					System.out.println(java_cert.getSubjectDN());
+//					System.out.println(java_cert.getSubjectX500Principal());
 
-					String serverCN = null;
+					String serverCN = java_cert.getSubjectX500Principal().toString();
 //					String serverCN = "*.gstatic.com";
 					
 					// TODO: add in code to get the remote server's CN from its cert.
@@ -261,7 +264,8 @@ public class HTTPSProxyEngine extends ProxyEngine
 				System.err.println("New proxy proxy connection to " +
 						m_tempRemoteHost + ":" + m_tempRemotePort);
 
-				this.launchThreadPair(localSocket, remoteSocket,
+				this.launchThreadPair(localSocket,
+						remoteSocket,
 						localSocket.getInputStream(),
 						localSocket.getOutputStream(),
 						m_tempRemoteHost, m_tempRemotePort);

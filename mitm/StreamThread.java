@@ -82,7 +82,7 @@ public class StreamThread implements Runnable
 		} catch (SocketException e) {
 			// Be silent about SocketExceptions.
 		} catch (Exception e) {
-			e.printStackTrace(System.err);
+//			e.printStackTrace(System.err);
 		}
 
 		try {

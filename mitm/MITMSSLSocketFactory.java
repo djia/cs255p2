@@ -9,20 +9,33 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.KeyStore;
+import java.security.Principal;
 import java.security.PrivateKey;
+import java.security.SecureRandom;
 import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+//import java.security.cert.X509Certificate;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.security.auth.x500.X500Principal;
+
+import iaik.x509.X509Certificate;
 
 
 /**
@@ -98,7 +111,83 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 	{
 		// TODO: replace this with code to generate a new
 		// server certificate with common name remoteCN
-		this();
+		
+//		this();
+		
+		m_sslContext = SSLContext.getInstance("SSL");
+
+		final KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+
+		final String keyStoreFile = System.getProperty(JSSEConstants.KEYSTORE_PROPERTY);
+		final char[] keyStorePassword = System.getProperty(JSSEConstants.KEYSTORE_PASSWORD_PROPERTY, "").toCharArray();
+		final String keyStoreType = System.getProperty(JSSEConstants.KEYSTORE_TYPE_PROPERTY, "jks");
+
+		final KeyStore keyStore;
+
+		if (keyStoreFile != null) {
+			keyStore = KeyStore.getInstance(keyStoreType);
+			keyStore.load(new FileInputStream(keyStoreFile), keyStorePassword);
+
+			this.ks = keyStore;
+		} else {
+			keyStore = null;
+		}
+		
+		// dynamically create a new key with the remoteCN and save it in the keystore
+		// first generate a key pair
+//		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+//		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+//		keyGen.initialize(1024, random);
+//		KeyPair pair = keyGen.generateKeyPair();
+		
+		// create new certificate
+//		PrivateKey privkey = pair.getPrivate();
+//		X509CertInfo info = new X509CertInfo();
+//		Date from = new Date();
+//		Date to = new Date(from.getTime() + days * 86400000l);
+//		CertificateValidity interval = new CertificateValidity(from, to);
+//		BigInteger sn = new BigInteger(64, new SecureRandom());
+//		X500Name owner = new X500Name(dn);
+// 
+//		info.set(X509CertInfo.VALIDITY, interval);
+//		info.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(sn));
+//		info.set(X509CertInfo.SUBJECT, new CertificateSubjectName(owner));
+//		info.set(X509CertInfo.ISSUER, new CertificateIssuerName(owner));
+//		info.set(X509CertInfo.KEY, new CertificateX509Key(pair.getPublic()));
+//		info.set(X509CertInfo.VERSION, new CertificateVersion(CertificateVersion.V3));
+//		AlgorithmId algo = new AlgorithmId(AlgorithmId.md5WithRSAEncryption_oid);
+//		info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(algo));
+// 
+//		// Sign the cert to identify the algorithm that's used.
+//		X509CertImpl cert = new X509CertImpl(info);
+//		cert.sign(privkey, algorithm);
+// 
+//		// Update the algorith, and resign.
+//		algo = (AlgorithmId)cert.get(X509CertImpl.SIG_ALG);
+//		info.set(CertificateAlgorithmId.NAME + "." + CertificateAlgorithmId.ALGORITHM, algo);
+//		cert = new X509CertImpl(info);
+//		cert.sign(privkey, algorithm);
+		
+		// create a new certificate
+		X509Certificate cert = new X509Certificate();
+		GregorianCalendar date = (GregorianCalendar)Calendar.getInstance();
+		cert.setValidNotBefore(date.getTime());                    
+		date.add(Calendar.MONTH, 6);
+		cert.setValidNotAfter(date.getTime());
+		
+		System.out.println(remoteCN);
+		
+//		cert.setSubjectDN(new X500Principal(remoteCN));
+		
+//		keyStore.setCertificateEntry("my_cert", cert);
+		System.out.println(keyStore.size());
+		
+		keyManagerFactory.init(keyStore, keyStorePassword);
+
+		m_sslContext.init(keyManagerFactory.getKeyManagers(), new TrustManager[] { new TrustEveryone() }, null);
+
+		m_clientSocketFactory = m_sslContext.getSocketFactory();
+		m_serverSocketFactory = m_sslContext.getServerSocketFactory(); 
 	}
 
 	public final ServerSocket createServerSocket(String localHost,
@@ -142,6 +231,22 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 
 		public X509Certificate[] getAcceptedIssuers() {
 			return null;
+		}
+
+		@Override
+		public void checkClientTrusted(
+				java.security.cert.X509Certificate[] arg0, String arg1)
+				throws CertificateException {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void checkServerTrusted(
+				java.security.cert.X509Certificate[] arg0, String arg1)
+				throws CertificateException {
+			// TODO Auto-generated method stub
+			
 		}
 	}
 }
