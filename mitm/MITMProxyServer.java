@@ -62,6 +62,8 @@ public class MITMProxyServer
 		int localPort = 8001;
 		int adminPort = 8002;
 		String localHost = "localhost";
+		
+		System.setProperty(JSSEConstants.KEYSTORE_ALIAS_PROPERTY, "mykey");
 
 		int timeout = 0; 
 		String filename = null;
@@ -74,17 +76,13 @@ public class MITMProxyServer
 				} else if (args[i].equals("-localPort")) {
 					localPort = Integer.parseInt(args[++i]);
 				} else if (args[i].equals("-keyStore")) {
-					System.setProperty(JSSEConstants.KEYSTORE_PROPERTY,
-							args[++i]);
+					System.setProperty(JSSEConstants.KEYSTORE_PROPERTY, args[++i]);
 				} else if (args[i].equals("-keyStorePassword")) {
-					System.setProperty(
-							JSSEConstants.KEYSTORE_PASSWORD_PROPERTY, args[++i]);
+					System.setProperty(JSSEConstants.KEYSTORE_PASSWORD_PROPERTY, args[++i]);
 				} else if (args[i].equals("-keyStoreType")) {
-					System.setProperty(JSSEConstants.KEYSTORE_TYPE_PROPERTY,
-							args[++i]);
+					System.setProperty(JSSEConstants.KEYSTORE_TYPE_PROPERTY, args[++i]);
 				} else if (args[i].equals("-keyStoreAlias")) {
-					System.setProperty(JSSEConstants.KEYSTORE_ALIAS_PROPERTY,
-							args[++i]);
+					System.setProperty(JSSEConstants.KEYSTORE_ALIAS_PROPERTY, args[++i]);
 				} else if (args[i].equals("-timeout")) {
 					timeout = Integer.parseInt(args[++i]) * 1000;
 				} else if( args[i].equals("-pwdFile")) {

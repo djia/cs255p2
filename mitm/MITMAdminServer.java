@@ -54,28 +54,25 @@ class MITMAdminServer implements Runnable
 				// Read a buffer full.
 				int bytesRead = in.read(buffer);
 
-				String line =
-						bytesRead > 0 ?
-								new String(buffer, 0, bytesRead) : "";
+				String line = bytesRead > 0 ? new String(buffer, 0, bytesRead) : "";
 
-								Matcher userPwdMatcher =
-										userPwdPattern.matcher(line);
+				Matcher userPwdMatcher = userPwdPattern.matcher(line);
 
-								// parse username and pwd
-								if (userPwdMatcher.find()) {
-									String userName = userPwdMatcher.group(1);
-									String password = userPwdMatcher.group(2);
+				// parse username and pwd
+				if (userPwdMatcher.find()) {
+					String userName = userPwdMatcher.group(1);
+					String password = userPwdMatcher.group(2);
 
-									// TODO authenticate
-									// if authenticated, do the command
-									boolean authenticated = true;
-									if( authenticated ) {
-										String command = userPwdMatcher.group(3);
-										String commonName = userPwdMatcher.group(4);
+					// TODO authenticate
+					// if authenticated, do the command
+					boolean authenticated = true;
+					if( authenticated ) {
+						String command = userPwdMatcher.group(3);
+						String commonName = userPwdMatcher.group(4);
 
-										doCommand( command );
-									}
-								}	
+						doCommand( command );
+					}
+				}	
 			}
 			catch( InterruptedIOException e ) {
 			}
@@ -84,16 +81,22 @@ class MITMAdminServer implements Runnable
 			}
 		}
 	}
-
-	// TODO implement the commands
-	private void doCommand( String cmd ) throws IOException {
-		PrintWriter writer = new PrintWriter(m_socket.getOutputStream());
-		
-		writer.println("asdf asdf hello world");
-		writer.flush();
-		
-		m_socket.close();
-
-	}
+	
+    // DONETODO implement the commands
+    private void doCommand( String cmd ) throws IOException {
+    	PrintWriter writer = new PrintWriter(m_socket.getOutputStream());
+    	if(cmd.equals("shutdown")){
+    		writer.println("Shutting down proxy server.");
+    		m_engine.shutdown();
+    	} else if(cmd.equals("stats")) {
+    		int numRequests = m_engine.getNumRequests();
+    		writer.println("Number of requests was: " + numRequests);
+    	} else {
+    		writer.println("Please submit a valid command: \"shutdown\" or \"stats\"");
+    	}
+    	writer.flush();
+    	m_socket.close();
+	
+    }
 
 }

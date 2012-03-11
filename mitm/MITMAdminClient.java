@@ -84,8 +84,7 @@ public class MITMAdminClient
 	{
 		try {
 			if( m_remoteSocket != null ) {
-				PrintWriter writer =
-						new PrintWriter( m_remoteSocket.getOutputStream() );
+				PrintWriter writer = new PrintWriter( m_remoteSocket.getOutputStream() );
 				writer.println("username:"+username);
 				writer.println("password:"+password);
 				writer.println("command:"+command);

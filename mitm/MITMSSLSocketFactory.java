@@ -79,7 +79,7 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 			throws IOException,GeneralSecurityException
 	{
 		m_sslContext = SSLContext.getInstance("SSL");
-
+	
 		final KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 
 		final String keyStoreFile = System.getProperty(JSSEConstants.KEYSTORE_PROPERTY);
@@ -140,10 +140,10 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 		
 
 		X509Certificate cert = new X509Certificate(certificateBytes);
-		PrivateKey myKey = (PrivateKey) keyStore.getKey("mykey", new String("password").toCharArray());
+		PrivateKey myKey = (PrivateKey) keyStore.getKey(System.getProperty(JSSEConstants.KEYSTORE_ALIAS_PROPERTY), new String("password").toCharArray());
 		
 		// get the old certificate
-		java.security.cert.X509Certificate oldJavaCert = (java.security.cert.X509Certificate)keyStore.getCertificate("mykey");
+		java.security.cert.X509Certificate oldJavaCert = (java.security.cert.X509Certificate)keyStore.getCertificate(System.getProperty(JSSEConstants.KEYSTORE_ALIAS_PROPERTY));
 		byte[] oldJavaCertBytes = oldJavaCert.getEncoded();
 		
 		// put the subjectDN from the remote certificate to the old certificate and sign it
@@ -159,7 +159,7 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 		
 		X509Certificate[] certChain = {oldCert};
 		
-		keyStore.setKeyEntry("mykey", myKey, new String("password").toCharArray(), certChain);
+		keyStore.setKeyEntry(System.getProperty(JSSEConstants.KEYSTORE_ALIAS_PROPERTY), myKey, new String("password").toCharArray(), certChain);
 		
 		keyManagerFactory.init(keyStore, keyStorePassword);
 
@@ -216,7 +216,6 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 		public void checkClientTrusted(
 				java.security.cert.X509Certificate[] arg0, String arg1)
 				throws CertificateException {
-			// TODO Auto-generated method stub
 			
 		}
 
@@ -224,7 +223,6 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 		public void checkServerTrusted(
 				java.security.cert.X509Certificate[] arg0, String arg1)
 				throws CertificateException {
-			// TODO Auto-generated method stub
 			
 		}
 	}

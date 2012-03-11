@@ -49,10 +49,14 @@ public class HTTPSProxyEngine extends ProxyEngine
 {
 
 	public static final String ACCEPT_TIMEOUT_MESSAGE = "Listen time out";
-
+	private static Boolean isRunning = true;
+	
 	private String m_tempRemoteHost;
 	private int m_tempRemotePort;
-
+	
+	private int numRequests = 0;
+	
+	
 	private final Pattern m_httpsConnectPattern;
 
 	private final ProxySSLEngine m_proxySSLEngine;
@@ -95,8 +99,7 @@ public class HTTPSProxyEngine extends ProxyEngine
 	{
 		// Should be more than adequate.
 		final byte[] buffer = new byte[40960];
-
-		while (true) {
+		while (isRunning) {
 			try {
 				//Plaintext Socket with client (i.e. browser)
 				final Socket localSocket = getServerSocket().accept();
@@ -161,6 +164,7 @@ public class HTTPSProxyEngine extends ProxyEngine
 //					BigInteger serialNumber = java_cert.getSerialNumber();
 					
 					// DONETODO: add in code to get the remote server's CN from its cert.
+					// add in code to get the remote server's CN from its cert.
 					
 					//We've already opened the socket, so might as well keep using it:
 					m_proxySSLEngine.setRemoteSocket(remoteSocket);
@@ -208,9 +212,22 @@ public class HTTPSProxyEngine extends ProxyEngine
 			catch (Exception e) {
 				e.printStackTrace(System.err);
 			}
+			numRequests++;
 		}
+		
+		m_proxySSLEngine.closeSocket();
 	}
 
+	public void shutdown() {
+		isRunning = false;
+		System.err.println("Engine exited");
+		System.exit(0);
+	}
+	
+	public int getNumRequests() {
+		return numRequests;
+	}
+	
 	private void sendClientResponse(OutputStream out, String msg, String remoteHost, int remotePort) throws IOException {
 		final StringBuffer response = new StringBuffer();
 		response.append("HTTP/1.0 ").append(msg).append("\r\n");
@@ -242,6 +259,15 @@ public class HTTPSProxyEngine extends ProxyEngine
 			super(socketFactory, requestFilter, responseFilter, new ConnectionDetails(HTTPSProxyEngine.this.getConnectionDetails().getLocalHost(), 0, "", -1, true), 0);
 		}
 
+		public void closeSocket() {
+			try {
+				this.remoteSocket.close();
+				m_serverSocket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		public final void setRemoteSocket(Socket s) {
 			this.remoteSocket = s;
 		}
