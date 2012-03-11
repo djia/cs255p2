@@ -12,6 +12,7 @@ import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.security.Key;
@@ -23,6 +24,11 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
+
+import com.sun.xml.internal.ws.util.StringUtils;
 
 public class PasswordEncrypter {
 	
@@ -38,6 +44,7 @@ public class PasswordEncrypter {
 	public static void main(String[] args) {
 		PasswordEncrypter pwdManager = new PasswordEncrypter(args);
 		pwdManager.encryptPwdFile();
+//		pwdManager.decryptPwdFile();
 	}
 
 	private Error printUsage() {
@@ -107,6 +114,7 @@ public class PasswordEncrypter {
 			m_publicKey = (PublicKey)newCert.getPublicKey();
 			
 		} catch (Exception e) {
+			//throw printUsage();
 			e.printStackTrace();
 		}
 	}
@@ -121,9 +129,12 @@ public class PasswordEncrypter {
 	 */
 	private void encryptPwdFile() {
 //		byte[] outputFileData = new byte[65536];
-		ArrayList<Byte> outputFileData = new ArrayList<Byte>();
+//		ArrayList<Byte> outputFileData = new ArrayList<Byte>();
+		// saves data for each line as strings
+		ArrayList<String> lines = new ArrayList<String>();
 		SecureRandom secureRandom = new SecureRandom();
-		String newLineCharacter = "::";
+		String lineSeparator = "::";
+		String tokenSeparator = ":";
 		
 		int bytesParsed = 0;
 		
@@ -135,48 +146,69 @@ public class PasswordEncrypter {
 			String strLine;
 			//Read File Line By Line
 			while ((strLine = br.readLine()) != null)   {
-				// Print the content on the console
+				String line = "";
 				String[] parts = strLine.split(":");
-				byte[] username = parts[0].getBytes();
+				String username = parts[0];
 				byte[] password = parts[1].getBytes();
 				byte[] salt = new byte[20];
 				secureRandom.nextBytes(salt);
+				
 				// we encrypt salt + password
-				byte[] saltPassword = concatBytes(salt, password);
-				byte[] saltEncrypted = SHAsum(saltPassword);
+				byte[] saltPassword = PasswordUtil.concatBytes(salt, password);
+				byte[] saltEncrypted = PasswordUtil.SHAsum(saltPassword);
 				// add the salt to the front of it
-				saltEncrypted = concatBytes(concatBytes(salt, new String(":").getBytes()), saltEncrypted);
-				byte[] newLine = concatBytes(concatBytes(username, new String(":").getBytes()), saltEncrypted);
-				newLine = concatBytes(newLine, newLineCharacter.getBytes());
-				for(int i = 0; i < newLine.length; i++) {
-//					outputFileData[bytesParsed + i] = newLine[i];
-					outputFileData.add(newLine[i]);
-				}
+//				saltEncrypted = concatBytes(concatBytes(salt, new String(":").getBytes()), saltEncrypted);
+//				byte[] newLine = concatBytes(concatBytes(username, new String(":").getBytes()), saltEncrypted);
+//				newLine = concatBytes(newLine, newLineCharacter.getBytes());
+//				for(int i = 0; i < newLine.length; i++) {
+////					outputFileData[bytesParsed + i] = newLine[i];
+//					outputFileData.add(newLine[i]);
+//				}
+				
+				// convert all bytes to integer then to string and add to outputFileData
+				// we serialize the bytes to integers then add to string to prevent conflicts
+				// when decrypting
+				line += username + tokenSeparator;
+				line += PasswordUtil.bytesToString(salt, ",") + tokenSeparator;
+				line += PasswordUtil.bytesToString(saltEncrypted, ",");
+				
+				// add this lineString to all the lines
+				lines.add(line);
+				
 //				System.out.println(outputFileData);
 //				outputFileData
-				bytesParsed += newLine.length;
+//				bytesParsed += newLine.length;
 			}
 			//Close the input stream
 			in.close();
 			
 			//finally encrypt it with RSA from our keystore
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			DataOutputStream out = new DataOutputStream(baos);
-			for (byte element : outputFileData) {
-			    out.write(element);
+//			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//			DataOutputStream out = new DataOutputStream(baos);
+//			for (byte element : outputFileData) {
+//			    out.write(element);
+//			}
+//			byte[] outputFileDataBytes = baos.toByteArray();
+			String outputFileData = "";
+			for(int i = 0; i < lines.size(); i++) {
+				if(i != 0) {
+					outputFileData += lineSeparator;
+				}
+				outputFileData += lines.get(i);
 			}
-			byte[] outputFileDataBytes = baos.toByteArray();
-//			byte[] encryptedOutputFileData = PasswordUtil.encrypt(outputFileDataBytes, m_publicKey);
+			System.out.println(outputFileData);
+			//byte[] encryptedOutputFileData = PasswordUtil.encrypt(outputFileDataBytes, m_publicKey);
+			PasswordUtil.encryptAndWrite(outputFileData.getBytes(), m_publicKey, this.m_encryptedPwdFileName);
 			
 			// write it to the output file
-			try{
-				FileOutputStream fos = new FileOutputStream(this.m_encryptedPwdFileName);
-//				fos.write(encryptedOutputFileData);
-				fos.write(outputFileDataBytes);
-				fos.close();
-			} catch (Exception e){//Catch exception if any
-				System.err.println("Error: " + e.getMessage());
-			}
+			//try{
+			//	FileOutputStream fos = new FileOutputStream(this.m_encryptedPwdFileName);
+			//	fos.write(encryptedOutputFileData);
+//				fos.write(outputFileDataBytes);
+			//	fos.close();
+			//} catch (Exception e){//Catch exception if any
+			//		System.err.println("Error: " + e.getMessage());
+			//}
 			
 		} catch (Exception e){//Catch exception if any
 			System.err.println("Error: " + e.getMessage());
@@ -184,18 +216,34 @@ public class PasswordEncrypter {
 		
 	}
 	
-	
-	public static byte[] SHAsum(byte[] toConvert) throws NoSuchAlgorithmException{
-	    MessageDigest md = MessageDigest.getInstance("SHA-1");
-	    return md.digest(toConvert);
-	}
-	
-	public static byte[] concatBytes(byte[] A, byte[] B) {
-		byte[] C= new byte[A.length+B.length];
-		System.arraycopy(A, 0, C, 0, A.length);
-		System.arraycopy(B, 0, C, A.length, B.length);
+	public void decryptPwdFile() {
+		try {
+			byte[] byteArr = PasswordUtil.readAndDecrypt(m_encryptedPwdFileName, m_privateKey);
+			System.out.println(new String(byteArr));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
-		return C;
+		/*InputStream inputReader = null;
+		try {
+			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+			byte[] buf = new byte[128];
+			cipher.init(2, m_privateKey);
+			inputReader = new FileInputStream("/home/dillon/programming/cs255p2/out.txt");
+			inputReader.
+			String result = "";
+			int bufl;
+			while ( (bufl = inputReader.read(buf)) != -1) {
+				byte[] encText = null;
+				encText = decrypt(copyBytes(buf,bufl),(PrivateKey)key);
+				result += new String(encText);
+			}
+			System.out.println(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} */
+		
+		
 	}
 	
 	

@@ -2,6 +2,7 @@ package mitm;
 
 import iaik.x509.X509Certificate;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -10,6 +11,8 @@ import java.nio.ByteBuffer;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Formatter;
@@ -50,7 +53,10 @@ public class PasswordUtil {
 		bb.rewind();
 		byte[] output = new byte[65536];
 		int bytesParsed = 0;
-		while (bb.hasRemaining()) {
+		
+		while (bb.remaining() > 0) {
+			int numRemaining = bb.remaining();
+			bufferLen = (numRemaining >=100) ? 100 : numRemaining;
 			byte[] out = new byte[bufferLen];
 			bb.get(out);
 			byte[] finishedOut = encryptOnce(out, key);
@@ -62,34 +68,52 @@ public class PasswordUtil {
 		return output;
 	}
 	
+	public static void encryptAndWrite(byte[] text, PublicKey key, String outputFileName) throws Exception {
+		int bufferLen = 100;
+		ByteBuffer bb = ByteBuffer.wrap(text);
+		bb.rewind();
+		
+		FileOutputStream fos = new FileOutputStream(outputFileName);
+		
+		while (bb.remaining() > 0) {
+			int numRemaining = bb.remaining();
+			bufferLen = (numRemaining >=100) ? 100 : numRemaining;
+			byte[] out = new byte[bufferLen];
+			bb.get(out);
+			byte[] finishedOut = encryptOnce(out, key);
+			fos.write(finishedOut);
+		}
+		fos.flush();
+		fos.close();
+	}
+	
 	private static byte[] encryptOnce(byte[] text, PublicKey key) throws Exception {
 		byte[] cipherText = null;
 		// get an RSA cipher object and print the provider
 		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-//		System.out.println("nProvider is: " + cipher.getProvider().getInfo());
+
 		// encrypt the plaintext using the public key
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 		cipherText = cipher.doFinal(text);
 		return cipherText;
 	}
 	
-	public static byte[] decrypt(byte[] text, PrivateKey key) throws Exception {
-		int bufferLen = 120;
-		ByteBuffer bb = ByteBuffer.wrap(text);
-		bb.rewind();
-		byte[] output = new byte[65536];
-		int bytesParsed = 0;
-		while (bb.hasRemaining()) {
-			byte[] out = new byte[bufferLen];
-			bb.get(out);
-			byte[] finishedOut = decryptOnce(out, key);
-			for(int i = 0; i < finishedOut.length; i++) {
-				output[bytesParsed + i] = finishedOut[i];
-			}
-			bytesParsed += finishedOut.length;
-//			System.out.println(bytesParsed);
+	public static byte[] readAndDecrypt(String inputFileName, PrivateKey key) throws Exception {
+		int bufferLen = 128;
+		InputStream inputReader = new FileInputStream(inputFileName);
+		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+		byte[] buf = new byte[128];
+		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+		int bufl;
+		while ( (bufl = inputReader.read(buf)) != -1) {
+			byte[] encText = null;
+			encText = decryptOnce(copyBytes(buf,bufl), key);
+			//outputWriter.write(encText);
+//			result += new String(encText);
+			byteOutputStream.write(encText);
 		}
-		return output;
+		
+		return byteOutputStream.toByteArray();
 	}
 	
 	private static byte[] decryptOnce(byte[] text, PrivateKey key) throws Exception {
@@ -120,7 +144,7 @@ public class PasswordUtil {
 				if (cipherMode == Cipher.ENCRYPT_MODE) {
 					encText = encrypt(copyBytes(buf,bufl),(PublicKey)key);
 				} else {
-					encText = decrypt(copyBytes(buf,bufl),(PrivateKey)key);
+					encText = decryptOnce(copyBytes(buf,bufl),(PrivateKey)key);
 				}
 				outputWriter.write(encText);
 //				result += new String(encText);
@@ -151,5 +175,48 @@ public class PasswordUtil {
 	  }
 	  return newArr;
 	}
-
+	
+	
+	public static byte[] SHAsum(byte[] toConvert) throws NoSuchAlgorithmException{
+	    MessageDigest md = MessageDigest.getInstance("SHA-1");
+	    return md.digest(toConvert);
+	}
+	
+	/**
+	 * converts a byte array to a string by first converting each byte to an integer and then casting to string
+	 * @param bytes the bytes array
+	 * @param separator the separator to put between each byte
+	 * @return
+	 */
+	public static String bytesToString(byte[] bytes, String separator) {
+		String output = "";
+		for(int i = 0; i < bytes.length; i++) {
+			if(i != 0) {
+				output += separator;
+			}
+			output += "" + (int)bytes[i];
+		}
+		return output;
+	}
+	
+	public static byte[] stringToBytes(String string, String separator) {
+		String[] parts = string.split(separator);
+		byte[] output = new byte[parts.length];
+		for(int i = 0; i < parts.length; i++) {
+			output[i] = (byte)Integer.parseInt(parts[i]);
+		}
+		return output;
+	}
+	
+	
+	public static byte[] concatBytes(byte[] A, byte[] B) {
+		byte[] C= new byte[A.length+B.length];
+		System.arraycopy(A, 0, C, 0, A.length);
+		System.arraycopy(B, 0, C, A.length, B.length);
+		
+		return C;
+	}
+	
+	
+	
 }
