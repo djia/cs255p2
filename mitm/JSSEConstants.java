@@ -12,4 +12,7 @@ public interface JSSEConstants
 	"javax.net.ssl.keyStoreAlias";
 
     public final static String DEFAULT_ALIAS = "mykey";
+    
+    // the encrypted password file
+    public final static String PASSWORD_FILE_PROPERTY = "pwd.txt";
 }

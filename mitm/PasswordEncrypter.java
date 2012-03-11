@@ -28,8 +28,6 @@ import java.util.HashMap;
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 
-import com.sun.xml.internal.ws.util.StringUtils;
-
 public class PasswordEncrypter {
 	
 	private String m_plainPwdFileName;
@@ -59,6 +57,7 @@ public class PasswordEncrypter {
 						"\n   [-keyStore <file>]           Key store details for" +
 						"\n   [-keyStorePassword <pass>]   certificates. Equivalent to" +
 						"\n   [-keyStoreAlias <alias>]     Default is keytool default of 'mykey'" +
+						"\n   [-keyStoreType <type>]       javax.net.ssl.XXX properties" +
 						"\n   [-outputFile <filename>]     Encrypted Password file output default to 'pwd.txt'" +
 						"\n" +
 						"\n -outputFile specifies the file that the encrypted password data will go." +
@@ -89,6 +88,8 @@ public class PasswordEncrypter {
 					System.setProperty(JSSEConstants.KEYSTORE_PASSWORD_PROPERTY, args[++i]);
 				} else if (args[i].equals("-keyStoreAlias")) {
 					System.setProperty(JSSEConstants.KEYSTORE_ALIAS_PROPERTY, args[++i]);
+				} else if (args[i].equals("-keyStoreType")) {
+					System.setProperty(JSSEConstants.KEYSTORE_TYPE_PROPERTY, args[++i]);
 				} else if (args[i].equals("-outputFile")) {
 					this.m_encryptedPwdFileName = args[++i];
 				} else {

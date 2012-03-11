@@ -30,7 +30,7 @@ public class MITMProxyServer
 						"\n   [-localHost <host name/ip>]  Default is localhost" +
 						"\n   [-localPort <port>]          Default is 8001" +
 						"\n   [-adminPort <port>]          Default is 8002" +
-						"\n   [-pwdFile <file> ]           Password file" +
+						"\n   [-pwdFile <file> ]           Password file default is pwd.txt" +
 						"\n   [-keyStore <file>]           Key store details for" +
 						"\n   [-keyStorePassword <pass>]   certificates. Equivalent to" +
 						"\n   [-keyStoreType <type>]       javax.net.ssl.XXX properties" +
@@ -64,6 +64,7 @@ public class MITMProxyServer
 		String localHost = "localhost";
 		
 		System.setProperty(JSSEConstants.KEYSTORE_ALIAS_PROPERTY, "mykey");
+		System.setProperty(JSSEConstants.PASSWORD_FILE_PROPERTY, "pwd.txt");
 
 		int timeout = 0; 
 		String filename = null;
@@ -86,7 +87,8 @@ public class MITMProxyServer
 				} else if (args[i].equals("-timeout")) {
 					timeout = Integer.parseInt(args[++i]) * 1000;
 				} else if( args[i].equals("-pwdFile")) {
-					i++; // TODO parse this as needed
+					// TODO parse this as needed
+					System.setProperty(JSSEConstants.PASSWORD_FILE_PROPERTY, args[++i]);
 				} else if (args[i].equals("-adminPort")) {
 					adminPort = Integer.parseInt(args[++i]);
 				} else if (args[i].equals("-outputFile")) {

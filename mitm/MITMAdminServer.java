@@ -10,6 +10,8 @@ package mitm;
 import java.net.*;
 import java.io.*;
 import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.util.*;
 import java.util.regex.*;
 
@@ -23,6 +25,7 @@ class MITMAdminServer implements Runnable
 	private ServerSocket m_serverSocket;
 	private Socket m_socket = null;
 	private HTTPSProxyEngine m_engine;
+	private PasswordManager m_passwordManager;
 
 	public MITMAdminServer( String localHost, int adminPort, HTTPSProxyEngine engine ) throws IOException {
 //		MITMPlainSocketFactory socketFactory = new MITMPlainSocketFactory();
@@ -33,6 +36,25 @@ class MITMAdminServer implements Runnable
 			m_engine = engine;
 		} catch (GeneralSecurityException e) {
 //			e.printStackTrace();
+		}
+		
+		// create a PasswordManager to authenticate passwords
+		final String keyStoreFile = System.getProperty(JSSEConstants.KEYSTORE_PROPERTY);
+		final char[] keyStorePassword = System.getProperty(JSSEConstants.KEYSTORE_PASSWORD_PROPERTY, "").toCharArray();
+		final String keyStoreType = System.getProperty(JSSEConstants.KEYSTORE_TYPE_PROPERTY, "jks");
+
+		final KeyStore keyStore;
+		try {
+			if (keyStoreFile != null) {
+				keyStore = KeyStore.getInstance(keyStoreType);
+				keyStore.load(new FileInputStream(keyStoreFile), keyStorePassword);
+			} else {
+				keyStore = null;
+			}
+			PrivateKey privateKey = (PrivateKey) keyStore.getKey(System.getProperty(JSSEConstants.KEYSTORE_ALIAS_PROPERTY), new String("password").toCharArray());
+			m_passwordManager = new PasswordManager(System.getProperty(JSSEConstants.PASSWORD_FILE_PROPERTY), privateKey);
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -63,14 +85,20 @@ class MITMAdminServer implements Runnable
 					String userName = userPwdMatcher.group(1);
 					String password = userPwdMatcher.group(2);
 
-					// TODO authenticate
+					// DONETODO authenticate
 					// if authenticated, do the command
-					boolean authenticated = true;
+//					boolean authenticated = true;
+					boolean authenticated = m_passwordManager.checkPassword(userName, password);
 					if( authenticated ) {
 						String command = userPwdMatcher.group(3);
 						String commonName = userPwdMatcher.group(4);
 
 						doCommand( command );
+					} else {
+						PrintWriter writer = new PrintWriter(m_socket.getOutputStream());
+						writer.println("Wrong username or password.");
+						writer.flush();
+						m_socket.close();
 					}
 				}	
 			}
@@ -87,6 +115,8 @@ class MITMAdminServer implements Runnable
     	PrintWriter writer = new PrintWriter(m_socket.getOutputStream());
     	if(cmd.equals("shutdown")){
     		writer.println("Shutting down proxy server.");
+    		// TODO doesn't output anything when shutdown!
+    		writer.flush();
     		m_engine.shutdown();
     	} else if(cmd.equals("stats")) {
     		int numRequests = m_engine.getNumRequests();

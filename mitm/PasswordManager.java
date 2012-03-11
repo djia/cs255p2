@@ -58,7 +58,7 @@ public class PasswordManager {
 	 * @param password
 	 * @return whether username / password combo matches
 	 */
-	private boolean checkPassword(String username, String password) {
+	public boolean checkPassword(String username, String password) {
 		boolean passwordChecked = false;
 		
 		// decrypt the file
@@ -100,10 +100,10 @@ public class PasswordManager {
 				byte[] saltPassword = PasswordUtil.concatBytes(salt, password.getBytes());
 				byte[] testSaltEncrypted = PasswordUtil.SHAsum(saltPassword);
 				
-				System.out.println(new String(saltEncrypted));
-				System.out.println(saltEncrypted.length);
-				System.out.println(new String(testSaltEncrypted));
-				System.out.println(testSaltEncrypted.length);
+//				System.out.println(new String(saltEncrypted));
+//				System.out.println(saltEncrypted.length);
+//				System.out.println(new String(testSaltEncrypted));
+//				System.out.println(testSaltEncrypted.length);
 				if(Arrays.equals(saltEncrypted, testSaltEncrypted)) {
 					passwordChecked = true;
 					System.out.println("checked");
