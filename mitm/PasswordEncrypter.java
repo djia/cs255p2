@@ -123,7 +123,7 @@ public class PasswordEncrypter {
 //		byte[] outputFileData = new byte[65536];
 		ArrayList<Byte> outputFileData = new ArrayList<Byte>();
 		SecureRandom secureRandom = new SecureRandom();
-		String newLineCharacter = "\n";
+		String newLineCharacter = "::";
 		
 		int bytesParsed = 0;
 		
@@ -142,7 +142,8 @@ public class PasswordEncrypter {
 				byte[] salt = new byte[20];
 				secureRandom.nextBytes(salt);
 				// we encrypt salt + password
-				byte[] saltEncrypted = SHAsum(concatBytes(salt, password));
+				byte[] saltPassword = concatBytes(salt, password);
+				byte[] saltEncrypted = SHAsum(saltPassword);
 				// add the salt to the front of it
 				saltEncrypted = concatBytes(concatBytes(salt, new String(":").getBytes()), saltEncrypted);
 				byte[] newLine = concatBytes(concatBytes(username, new String(":").getBytes()), saltEncrypted);
@@ -165,16 +166,16 @@ public class PasswordEncrypter {
 			    out.write(element);
 			}
 			byte[] outputFileDataBytes = baos.toByteArray();
-			byte[] encryptedOutputFileData = PasswordUtil.encrypt(outputFileDataBytes, m_publicKey);
+//			byte[] encryptedOutputFileData = PasswordUtil.encrypt(outputFileDataBytes, m_publicKey);
 			
 			// write it to the output file
 			try{
 				FileOutputStream fos = new FileOutputStream(this.m_encryptedPwdFileName);
-				fos.write(encryptedOutputFileData);
-//				fos.write(outputFileDataBytes);
+//				fos.write(encryptedOutputFileData);
+				fos.write(outputFileDataBytes);
 				fos.close();
 			} catch (Exception e){//Catch exception if any
-					System.err.println("Error: " + e.getMessage());
+				System.err.println("Error: " + e.getMessage());
 			}
 			
 		} catch (Exception e){//Catch exception if any
