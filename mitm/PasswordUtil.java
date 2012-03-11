@@ -2,6 +2,7 @@ package mitm;
 
 import iaik.x509.X509Certificate;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -69,8 +70,6 @@ public class PasswordUtil {
 		int bufferLen = 100;
 		ByteBuffer bb = ByteBuffer.wrap(text);
 		bb.rewind();
-		//byte[] output = new byte[65536];
-		int bytesParsed = 0;
 		
 		FileOutputStream fos = new FileOutputStream(outputFileName);
 		
@@ -97,23 +96,22 @@ public class PasswordUtil {
 		return cipherText;
 	}
 	
-	public static byte[] decrypt(byte[] text, PrivateKey key) throws Exception {
-		int bufferLen = 120;
-		ByteBuffer bb = ByteBuffer.wrap(text);
-		bb.rewind();
-		byte[] output = new byte[65536];
-		int bytesParsed = 0;
-		while (bb.hasRemaining()) {
-			byte[] out = new byte[bufferLen];
-			bb.get(out);
-			byte[] finishedOut = decryptOnce(out, key);
-			for(int i = 0; i < finishedOut.length; i++) {
-				output[bytesParsed + i] = finishedOut[i];
-			}
-			bytesParsed += finishedOut.length;
-//			System.out.println(bytesParsed);
+	public static byte[] readAndDecrypt(String inputFileName, PrivateKey key) throws Exception {
+		int bufferLen = 128;
+		InputStream inputReader = new FileInputStream(inputFileName);
+		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+		byte[] buf = new byte[128];
+		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+		int bufl;
+		while ( (bufl = inputReader.read(buf)) != -1) {
+			byte[] encText = null;
+			encText = decryptOnce(copyBytes(buf,bufl), key);
+			//outputWriter.write(encText);
+//			result += new String(encText);
+			byteOutputStream.write(encText);
 		}
-		return output;
+		
+		return byteOutputStream.toByteArray();
 	}
 	
 	private static byte[] decryptOnce(byte[] text, PrivateKey key) throws Exception {
@@ -144,7 +142,7 @@ public class PasswordUtil {
 				if (cipherMode == Cipher.ENCRYPT_MODE) {
 					encText = encrypt(copyBytes(buf,bufl),(PublicKey)key);
 				} else {
-					encText = decrypt(copyBytes(buf,bufl),(PrivateKey)key);
+					encText = decryptOnce(copyBytes(buf,bufl),(PrivateKey)key);
 				}
 				outputWriter.write(encText);
 //				result += new String(encText);

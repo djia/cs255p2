@@ -12,6 +12,7 @@ import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.security.Key;
@@ -23,6 +24,9 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
 
 public class PasswordEncrypter {
 	
@@ -37,7 +41,8 @@ public class PasswordEncrypter {
 	
 	public static void main(String[] args) {
 		PasswordEncrypter pwdManager = new PasswordEncrypter(args);
-		pwdManager.encryptPwdFile();
+		//pwdManager.encryptPwdFile();
+		pwdManager.decryptPwdFile();
 	}
 
 	private Error printUsage() {
@@ -182,6 +187,36 @@ public class PasswordEncrypter {
 		} catch (Exception e){//Catch exception if any
 			System.err.println("Error: " + e.getMessage());
 		}
+		
+	}
+	
+	public void decryptPwdFile() {
+		try {
+			byte[] byteArr = PasswordUtil.readAndDecrypt(m_encryptedPwdFileName, m_privateKey);
+			System.out.println(new String(byteArr));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		/*InputStream inputReader = null;
+		try {
+			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+			byte[] buf = new byte[128];
+			cipher.init(2, m_privateKey);
+			inputReader = new FileInputStream("/home/dillon/programming/cs255p2/out.txt");
+			inputReader.
+			String result = "";
+			int bufl;
+			while ( (bufl = inputReader.read(buf)) != -1) {
+				byte[] encText = null;
+				encText = decrypt(copyBytes(buf,bufl),(PrivateKey)key);
+				result += new String(encText);
+			}
+			System.out.println(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} */
+		
 		
 	}
 	
