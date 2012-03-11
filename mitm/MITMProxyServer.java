@@ -103,10 +103,6 @@ public class MITMProxyServer
 		catch (Exception e) {
 			throw printUsage();
 		}
-		
-//		System.out.print("JSEEConstants:__________________" + "\n");
-//		System.out.print(System.getProperty(JSSEConstants.KEYSTORE_PROPERTY) + "\n");
-//		System.out.print(System.getProperty(JSSEConstants.KEYSTORE_PASSWORD_PROPERTY));
 
 		if (timeout < 0) {
 			throw printUsage("Timeout must be non-negative");

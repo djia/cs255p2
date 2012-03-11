@@ -11,7 +11,9 @@ import java.net.*;
 import java.io.*;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.regex.*;
 
@@ -67,11 +69,9 @@ class MITMAdminServer implements Runnable
 				byte[] buffer = new byte[40960];
 
 				Pattern userPwdPattern =
-						Pattern.compile("username:(\\S+)\\s+password:(\\S+)\\s+command:(\\S+)\\sCN:(\\S*)\\s");
+						Pattern.compile("username:(\\S+)\\s+password:(\\S+)\\s+command:(\\S+)\\s+mode:(\\S+)\\sCN:(\\S*)\\s");
 
-				BufferedInputStream in =
-						new BufferedInputStream(m_socket.getInputStream(),
-								buffer.length);
+				BufferedInputStream in = new BufferedInputStream(m_socket.getInputStream(), buffer.length);
 
 				// Read a buffer full.
 				int bytesRead = in.read(buffer);
@@ -84,21 +84,13 @@ class MITMAdminServer implements Runnable
 				if (userPwdMatcher.find()) {
 					String userName = userPwdMatcher.group(1);
 					String password = userPwdMatcher.group(2);
+					String command = userPwdMatcher.group(3);
+					String mode = userPwdMatcher.group(4);
 
-					// DONETODO authenticate
-					// if authenticated, do the command
-//					boolean authenticated = true;
-					boolean authenticated = m_passwordManager.checkPassword(userName, password);
-					if( authenticated ) {
-						String command = userPwdMatcher.group(3);
-						String commonName = userPwdMatcher.group(4);
-
-						doCommand( command );
-					} else {
-						PrintWriter writer = new PrintWriter(m_socket.getOutputStream());
-						writer.println("Wrong username or password.");
-						writer.flush();
-						m_socket.close();
+					if(mode.equals("0")) {
+						handleClientRequestNormal(userName, password, command);
+					} else if(mode.equals("1")) {
+						handleClientRequestChallengeResponse(userName, command);
 					}
 				}	
 			}
@@ -110,12 +102,81 @@ class MITMAdminServer implements Runnable
 		}
 	}
 	
+	
+	private void handleClientRequestNormal(String userName, String password, String command) {
+		try {
+			// DONETODO authenticate
+			// if authenticated, do the command
+//			boolean authenticated = true;
+			boolean authenticated = m_passwordManager.checkPassword(userName, password);
+			if( authenticated ) {
+
+				doCommand( command );
+			} else {
+				PrintWriter writer = new PrintWriter(m_socket.getOutputStream());
+				writer.println("Wrong username or password.");
+				writer.flush();
+				m_socket.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	private void handleClientRequestChallengeResponse(String userName, String command) {
+		try {
+			// create a writer
+			PrintWriter writer = new PrintWriter(m_socket.getOutputStream());
+			// create a reader
+			BufferedReader r = new BufferedReader(new InputStreamReader(m_socket.getInputStream()));
+			
+			// get the secret and salt
+			byte[] secret = m_passwordManager.getSaltPasswordEncryptedForUsername(userName);
+			byte[] salt = m_passwordManager.getSaltForUsername(userName);
+			SecureRandom secureRandom = new SecureRandom();
+			
+			// send the salt so that the client can obtain the secret, which is sha1(salt + password);
+			writer.println(PasswordUtil.bytesToString(salt, ","));
+			// send the sc - server challenge
+			byte[] sc = new byte[20];
+			secureRandom.nextBytes(sc);
+			writer.println(PasswordUtil.bytesToString(sc, ","));
+			writer.flush();
+			
+			String crString = r.readLine();
+			String ccString = r.readLine();
+			byte[] cr = PasswordUtil.stringToBytes(crString, ",");
+			byte[] cc = PasswordUtil.stringToBytes(ccString, ",");
+			
+			// test cr = hash(cc + sc + secret)
+			byte[] crTest = PasswordUtil.SHAsum(PasswordUtil.concatBytes(PasswordUtil.concatBytes(cc, sc), secret));
+			
+			// if this authenticates, then do the command and send the info
+			if(Arrays.equals(cr, crTest)) {
+				doCommand( command );
+			} else {
+				writer.println("Challenge failed.");
+				writer.flush();
+				m_socket.close();
+			}
+			
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		
+		
+	}
+	
+	
     // DONETODO implement the commands
     private void doCommand( String cmd ) throws IOException {
     	PrintWriter writer = new PrintWriter(m_socket.getOutputStream());
     	if(cmd.equals("shutdown")){
     		writer.println("Shutting down proxy server.");
-    		// TODO doesn't output anything when shutdown!
     		writer.flush();
     		m_engine.shutdown();
     	} else if(cmd.equals("stats")) {

@@ -20,32 +20,6 @@ import java.util.Formatter;
 import javax.crypto.Cipher;
 
 public class PasswordUtil {
-
-//	public static void main(String[] args) {
-//		final String keyStoreFile = System.getProperty(JSSEConstants.KEYSTORE_PROPERTY);
-//		final char[] keyStorePassword = System.getProperty(JSSEConstants.KEYSTORE_PASSWORD_PROPERTY, "").toCharArray();
-//		final String keyStoreType = System.getProperty(JSSEConstants.KEYSTORE_TYPE_PROPERTY, "jks");
-//
-//		KeyStore keyStore;
-//		try {
-//			keyStore = KeyStore.getInstance(keyStoreType);
-//			keyStore.load(new FileInputStream("/home/dillon/programming/cs255p2/ks"), new String("password").toCharArray());
-//			Key key = keyStore.getKey("mykey", new String("password").toCharArray());
-//			
-//			
-//			java.security.cert.X509Certificate oldJavaCert = (java.security.cert.X509Certificate)keyStore.getCertificate("mykey");
-//			byte[] oldJavaCertBytes = oldJavaCert.getEncoded();
-//			
-//			X509Certificate oldCert = new X509Certificate(oldJavaCertBytes);
-//			Key newKey = (PublicKey)oldCert.getPublicKey();
-//			encryptDecryptFile("/home/dillon/programming/cs255p2/encrypted", "/home/dillon/programming/cs255p2/decrypted", key, 2);
-//			
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		
-//
-//	}
 	
 	public static byte[] encrypt(byte[] text, PublicKey key) throws Exception {
 		int bufferLen = 100;
@@ -68,6 +42,13 @@ public class PasswordUtil {
 		return output;
 	}
 	
+	/**
+	 * reads from a byte array and puts the results in a file
+	 * @param text byte array input
+	 * @param key the public key
+	 * @param outputFileName the name of the output file
+	 * @throws Exception
+	 */
 	public static void encryptAndWrite(byte[] text, PublicKey key, String outputFileName) throws Exception {
 		int bufferLen = 100;
 		ByteBuffer bb = ByteBuffer.wrap(text);
@@ -98,6 +79,13 @@ public class PasswordUtil {
 		return cipherText;
 	}
 	
+	/**
+	 * decrypts the contents of a file with the private key
+	 * @param inputFileName the name o the file to decrypt
+	 * @param key the private key
+	 * @return
+	 * @throws Exception
+	 */
 	public static byte[] readAndDecrypt(String inputFileName, PrivateKey key) throws Exception {
 		int bufferLen = 128;
 		InputStream inputReader = new FileInputStream(inputFileName);
@@ -108,8 +96,6 @@ public class PasswordUtil {
 		while ( (bufl = inputReader.read(buf)) != -1) {
 			byte[] encText = null;
 			encText = decryptOnce(copyBytes(buf,bufl), key);
-			//outputWriter.write(encText);
-//			result += new String(encText);
 			byteOutputStream.write(encText);
 		}
 		

@@ -272,9 +272,7 @@ public class HTTPSProxyEngine extends ProxyEngine
 			this.remoteSocket = s;
 		}
 
-//		public final ServerSocket createServerSocket(String remoteServerCN, BigInteger serialNumber) throws IOException, java.security.GeneralSecurityException, Exception {
 		public final ServerSocket createServerSocket(byte[] certificateBytes) throws IOException, java.security.GeneralSecurityException, Exception {
-//			MITMSSLSocketFactory ssf = new MITMSSLSocketFactory(remoteServerCN, serialNumber);
 			MITMSSLSocketFactory ssf = new MITMSSLSocketFactory(certificateBytes);
 			// you may want to consider caching this result for better performance
 			m_serverSocket = ssf.createServerSocket("localhost", 0, timeout);

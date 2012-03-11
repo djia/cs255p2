@@ -152,10 +152,8 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 		Principal cerIssuer = cert.getIssuerDN();
 		BigInteger serialNumber = cert.getSerialNumber();
 		oldCert.setSubjectDN(certSubject);
-//		oldCert.setIssuerDN(cerIssuer);
 		oldCert.setSerialNumber(serialNumber);
 		oldCert.sign(AlgorithmID.sha1WithRSAEncryption, myKey);
-//		oldCert.setIssuerDN(cert.getIssuerDN());
 		
 		X509Certificate[] certChain = {oldCert};
 		
