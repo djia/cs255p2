@@ -107,6 +107,7 @@ public class PasswordEncrypter {
 			m_publicKey = (PublicKey)newCert.getPublicKey();
 			
 		} catch (Exception e) {
+			//throw printUsage();
 			e.printStackTrace();
 		}
 	}
@@ -165,17 +166,18 @@ public class PasswordEncrypter {
 			    out.write(element);
 			}
 			byte[] outputFileDataBytes = baos.toByteArray();
-			byte[] encryptedOutputFileData = PasswordUtil.encrypt(outputFileDataBytes, m_publicKey);
+			//byte[] encryptedOutputFileData = PasswordUtil.encrypt(outputFileDataBytes, m_publicKey);
+			PasswordUtil.encryptAndWrite(outputFileDataBytes, m_publicKey, this.m_encryptedPwdFileName);
 			
 			// write it to the output file
-			try{
-				FileOutputStream fos = new FileOutputStream(this.m_encryptedPwdFileName);
-				fos.write(encryptedOutputFileData);
+			//try{
+			//	FileOutputStream fos = new FileOutputStream(this.m_encryptedPwdFileName);
+			//	fos.write(encryptedOutputFileData);
 //				fos.write(outputFileDataBytes);
-				fos.close();
-			} catch (Exception e){//Catch exception if any
-					System.err.println("Error: " + e.getMessage());
-			}
+			//	fos.close();
+			//} catch (Exception e){//Catch exception if any
+			//		System.err.println("Error: " + e.getMessage());
+			//}
 			
 		} catch (Exception e){//Catch exception if any
 			System.err.println("Error: " + e.getMessage());

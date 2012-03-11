@@ -50,7 +50,10 @@ public class PasswordUtil {
 		bb.rewind();
 		byte[] output = new byte[65536];
 		int bytesParsed = 0;
-		while (bb.hasRemaining()) {
+		
+		while (bb.remaining() > 0) {
+			int numRemaining = bb.remaining();
+			bufferLen = (numRemaining >=100) ? 100 : numRemaining;
 			byte[] out = new byte[bufferLen];
 			bb.get(out);
 			byte[] finishedOut = encryptOnce(out, key);
@@ -62,11 +65,32 @@ public class PasswordUtil {
 		return output;
 	}
 	
+	public static void encryptAndWrite(byte[] text, PublicKey key, String outputFileName) throws Exception {
+		int bufferLen = 100;
+		ByteBuffer bb = ByteBuffer.wrap(text);
+		bb.rewind();
+		//byte[] output = new byte[65536];
+		int bytesParsed = 0;
+		
+		FileOutputStream fos = new FileOutputStream(outputFileName);
+		
+		while (bb.remaining() > 0) {
+			int numRemaining = bb.remaining();
+			bufferLen = (numRemaining >=100) ? 100 : numRemaining;
+			byte[] out = new byte[bufferLen];
+			bb.get(out);
+			byte[] finishedOut = encryptOnce(out, key);
+			fos.write(finishedOut);
+		}
+		fos.flush();
+		fos.close();
+	}
+	
 	private static byte[] encryptOnce(byte[] text, PublicKey key) throws Exception {
 		byte[] cipherText = null;
 		// get an RSA cipher object and print the provider
 		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-//		System.out.println("nProvider is: " + cipher.getProvider().getInfo());
+
 		// encrypt the plaintext using the public key
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 		cipherText = cipher.doFinal(text);
