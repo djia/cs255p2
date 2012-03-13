@@ -206,18 +206,19 @@ public final class MITMSSLSocketFactory implements MITMSocketFactory
 		public void checkServerTrusted(X509Certificate[] chain, String authenticationType) {
 		}
 
-		public X509Certificate[] getAcceptedIssuers() {
+		
+		public java.security.cert.X509Certificate[] getAcceptedIssuers() {
 			return null;
 		}
 
-		@Override
+		//@Override
 		public void checkClientTrusted(
 				java.security.cert.X509Certificate[] arg0, String arg1)
 				throws CertificateException {
 			
 		}
 
-		@Override
+		//@Override
 		public void checkServerTrusted(
 				java.security.cert.X509Certificate[] arg0, String arg1)
 				throws CertificateException {

@@ -49,7 +49,7 @@ public class HTTPSProxyEngine extends ProxyEngine
 {
 
 	public static final String ACCEPT_TIMEOUT_MESSAGE = "Listen time out";
-	private static Boolean isRunning = true;
+	private static boolean isRunning = true;
 	
 	private String m_tempRemoteHost;
 	private int m_tempRemotePort;
@@ -90,7 +90,7 @@ public class HTTPSProxyEngine extends ProxyEngine
 		// connection). The engine handles multiple connections by
 		// spawning multiple thread pairs.
 
-		assert sslSocketFactory != null;
+		//assert sslSocketFactory != null;
 		m_proxySSLEngine = new ProxySSLEngine(sslSocketFactory, requestFilter, responseFilter);
 
 	}

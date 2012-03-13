@@ -36,9 +36,10 @@ public class PasswordEncrypter {
 	private PublicKey m_publicKey;
 	private PrivateKey m_privateKey;
 	
-	private HashMap<String, String> m_usernameToPassword;
-	private HashMap<String, String> m_usernameToSalt;
-	
+	//private HashMap<String, String> m_usernameToPassword;
+	//private HashMap<String, String> m_usernameToSalt;
+	private HashMap m_usernameToPassword;
+	private HashMap m_usernameToSalt;
 	public static void main(String[] args) {
 		PasswordEncrypter pwdManager = new PasswordEncrypter(args);
 		pwdManager.encryptPwdFile();
@@ -130,7 +131,8 @@ public class PasswordEncrypter {
 	 */
 	private void encryptPwdFile() {
 		// saves data for each line as strings
-		ArrayList<String> lines = new ArrayList<String>();
+		//ArrayList<String> lines = new ArrayList<String>();
+		ArrayList lines = new ArrayList();
 		SecureRandom secureRandom = new SecureRandom();
 		String lineSeparator = "::";
 		String tokenSeparator = ":";
