@@ -102,7 +102,12 @@ class MITMAdminServer implements Runnable
 		}
 	}
 	
-	
+	/**
+	 * handles the request normally
+	 * @param userName
+	 * @param password
+	 * @param command
+	 */
 	private void handleClientRequestNormal(String userName, String password, String command) {
 		try {
 			// DONETODO authenticate
@@ -123,7 +128,11 @@ class MITMAdminServer implements Runnable
 		}
 	}
 	
-	
+	/**
+	 * handles the request using the challenge/response authentical mechanism
+	 * @param userName
+	 * @param command
+	 */
 	private void handleClientRequestChallengeResponse(String userName, String command) {
 		try {
 			// create a writer

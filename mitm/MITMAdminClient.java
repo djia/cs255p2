@@ -98,7 +98,9 @@ public class MITMAdminClient
 		}
 	}
 	
-	
+	/**
+	 * runs the normal authentication mode where the password is sent
+	 */
 	public void runNormal() {
 		try {
 			if( m_remoteSocket != null ) {
@@ -129,7 +131,9 @@ public class MITMAdminClient
 	}
 	
 	
-	
+	/**
+	 * runs the challenge/response mode of authentication where the password is not sent
+	 */
 	public void runChallengeResponse() {
 		try {
 			PrintWriter writer = null;
